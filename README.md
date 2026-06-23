@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Centralized Patient Health Record Management System
 
 ## Tech Stack
@@ -118,3 +119,6 @@ git push origin feature/your-feature-name
 | POST | `/api/auth/login/` | Login — returns JWT tokens |
 | POST | `/api/auth/token/refresh/` | Get a new access token |
 | GET  | `/api/auth/me/` | Get current logged-in user |
+=======
+# centralized-patient-health-record-system
+>>>>>>> c237a15b5d3be191f6d46b2874b84fdebefdbc59
