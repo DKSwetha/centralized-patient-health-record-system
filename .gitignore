@@ -1,61 +1,7 @@
-# ── Python ───────────────────────────────────────────────
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
-
-# Virtual environment
 venv/
-env/
-.venv/
-
-# Django
-*.log
-*.pot
+__pycache__/
 *.pyc
-db.sqlite3
-staticfiles/
-mediafiles/
-
-# Secrets — NEVER commit these
 .env
-backend/.env
-.env.*
-!.env.example
-
-# ── Node / Next.js ───────────────────────────────────────
-node_modules/
-.next/
-out/
-.env.local
-frontend/.env.local
-
-# ── IDEs ─────────────────────────────────────────────────
-.idea/
-.vscode/
-*.iml
-
-# ── OS ───────────────────────────────────────────────────
-.DS_Store
-Thumbs.db
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Type checking
-.mypy_cache/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Mac/Linux temp files
-*.swp
-
-# Redis dump (if someone runs Redis locally)
-dump.rdb
+db.sqlite3
+*.log
+media/
