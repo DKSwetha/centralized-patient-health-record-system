@@ -1,2 +1,1 @@
-# TODO:
-# Implement MedicalRecord and Prescription serializers.
+# TODO
