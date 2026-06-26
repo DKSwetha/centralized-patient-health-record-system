@@ -21,6 +21,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    
+    #Person 4- File Storage
+    'storages',
 
     # Our apps
     'apps.accounts',
@@ -111,3 +114,48 @@ CORS_ALLOWED_ORIGINS = [
 # ── Celery / Redis (Person 3 will use this) ───────────────
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
+
+# ==========================================================
+# Person 4 - File Storage Configuration
+#
+# TODO (Infrastructure / DevOps):
+# Replace placeholder values with the team's MinIO or AWS S3
+# configuration when available.
+# ==========================================================
+
+AWS_ACCESS_KEY_ID = config(
+    "AWS_ACCESS_KEY_ID",
+    default="minioadmin"
+)
+
+AWS_SECRET_ACCESS_KEY = config(
+    "AWS_SECRET_ACCESS_KEY",
+    default="minioadmin"
+)
+
+AWS_STORAGE_BUCKET_NAME = config(
+    "AWS_STORAGE_BUCKET_NAME",
+    default="health-records"
+)
+
+AWS_S3_ENDPOINT_URL = config(
+    "AWS_S3_ENDPOINT_URL",
+    default="http://localhost:9000"
+)
+
+AWS_S3_REGION_NAME = None
+
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+
+AWS_S3_ADDRESSING_STYLE = "path"
+
+# ==========================================================
+# TODO (Person 4):
+# Uncomment this line after MinIO/S3 is running.
+# Leaving it commented prevents connection errors while the
+# storage server is not available.
+# ==========================================================
+
+# DEFAULT_FILE_STORAGE = (
+#     "storages.backends.s3boto3.S3Boto3Storage"
+# )
