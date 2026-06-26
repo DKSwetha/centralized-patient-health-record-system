@@ -17,7 +17,7 @@ class DoctorCreateSerializer(serializers.ModelSerializer):
     # User fields for creating the doctor's login account
     username = serializers.CharField(write_only=True)
     email = serializers.EmailField(write_only=True)
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, min_length=8)
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
 
@@ -40,7 +40,7 @@ class DoctorCreateSerializer(serializers.ModelSerializer):
             email=email,
             password=password,
             first_name=first_name,
-            last_name=last_name
+            last_name=last_name,
             role='DOCTOR'
         )
 
