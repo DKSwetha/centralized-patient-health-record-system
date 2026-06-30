@@ -115,3 +115,28 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute='*/5'),
     },
 }
+
+AWS_ACCESS_KEY_ID = config(
+    "AWS_ACCESS_KEY_ID",
+    default="minioadmin"
+)
+
+AWS_SECRET_ACCESS_KEY = config(
+    "AWS_SECRET_ACCESS_KEY",
+    default="minioadmin"
+)
+
+AWS_STORAGE_BUCKET_NAME = config(
+    "AWS_STORAGE_BUCKET_NAME",
+    default="health-records"
+)
+
+AWS_S3_REGION_NAME = config(
+    "AWS_S3_REGION_NAME",
+    default="us-east-1"
+)
+
+AWS_S3_ENDPOINT_URL = config(
+    "AWS_S3_ENDPOINT_URL",
+    default="http://localhost:9000"
+)
