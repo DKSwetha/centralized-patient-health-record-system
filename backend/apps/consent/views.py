@@ -4,12 +4,17 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from datetime import timedelta
-from datetime import datetime
+from datetime import timedelta, datetime
+
 from apps.accounts.permissions import IsPatient
-from .models import ConsentRequest
-from .serializers import ConsentRequestSerializer, ConsentRespondSerializer
+from .models import ConsentRequest, Appointment
+from .serializers import (
+    ConsentRequestSerializer, ConsentRespondSerializer,
+    AppointmentSerializer, OTPVerifySerializer
+)
 from .permissions import IsVerifiedDoctor, IsPatientOwner
+from .utils import hash_otp
+from .tasks import send_otp_task
 
 
 class ConsentRequestView(APIView):
@@ -23,10 +28,7 @@ class ConsentRequestView(APIView):
             hospital=request.user.doctor_profile.hospital,
             status='PENDING'
         )
-        return Response(
-            ConsentRequestSerializer(consent).data,
-            status=status.HTTP_201_CREATED
-        )
+        return Response(ConsentRequestSerializer(consent).data, status=status.HTTP_201_CREATED)
 
 
 class ConsentApproveView(APIView):
@@ -45,8 +47,7 @@ class ConsentApproveView(APIView):
         if consent.appointment:
             appt = consent.appointment
             expires_at = datetime.combine(
-                appt.appointment_date,
-                appt.end_time,
+                appt.appointment_date, appt.end_time,
                 tzinfo=timezone.get_current_timezone()
             )
         else:
@@ -58,10 +59,7 @@ class ConsentApproveView(APIView):
         consent.expires_at = expires_at
         consent.save()
 
-        return Response(
-            ConsentRequestSerializer(consent).data,
-            status=status.HTTP_200_OK
-        )
+        return Response(ConsentRequestSerializer(consent).data, status=status.HTTP_200_OK)
 
 
 class ConsentDenyView(APIView):
@@ -81,7 +79,78 @@ class ConsentDenyView(APIView):
         consent.resolved_at = timezone.now()
         consent.save()
 
-        return Response(
-            ConsentRequestSerializer(consent).data,
-            status=status.HTTP_200_OK
+        return Response(ConsentRequestSerializer(consent).data, status=status.HTTP_200_OK)
+
+
+class AppointmentCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = AppointmentSerializer(data=request.data)
+        if serializer.is_valid():
+            appointment = serializer.save(status='SCHEDULED')
+            if appointment.access_method == 'OTP':
+                send_otp_task.delay(appointment.id)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OTPVerifyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        appointment = get_object_or_404(Appointment, pk=pk)
+        serializer = OTPVerifySerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        submitted_hash = hash_otp(serializer.validated_data['otp'])
+        if submitted_hash != appointment.otp_hash:
+            return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+
+        appointment.otp_verified = True
+        appointment.status = 'ACTIVE'
+        appointment.save()
+
+        expires_at = datetime.combine(
+            appointment.appointment_date, appointment.end_time,
+            tzinfo=timezone.get_current_timezone()
         )
+        consent = ConsentRequest.objects.create(
+            patient=appointment.patient,
+            hospital=appointment.hospital,
+            requested_by=appointment.doctor,
+            status='APPROVED',
+            resolved_at=timezone.now(),
+            expires_at=expires_at,
+            appointment=appointment,
+            consent_method='RECEPTIONIST_OTP',
+        )
+        return Response({'message': 'OTP verified, access granted', 'consent_id': consent.id})
+
+
+class ManualVerifyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        appointment = get_object_or_404(Appointment, pk=pk)
+
+        appointment.verified_by_staff = request.user
+        appointment.status = 'ACTIVE'
+        appointment.save()
+
+        expires_at = datetime.combine(
+            appointment.appointment_date, appointment.end_time,
+            tzinfo=timezone.get_current_timezone()
+        )
+        consent = ConsentRequest.objects.create(
+            patient=appointment.patient,
+            hospital=appointment.hospital,
+            requested_by=appointment.doctor,
+            status='APPROVED',
+            resolved_at=timezone.now(),
+            expires_at=expires_at,
+            appointment=appointment,
+            consent_method='RECEPTIONIST_MANUAL',
+        )
+        return Response({'message': 'Manual verification done, access granted', 'consent_id': consent.id})

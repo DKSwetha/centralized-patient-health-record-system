@@ -17,14 +17,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Third-party
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'django_celery_beat',
-
-    # Our apps
     'apps.accounts',
     'apps.hospitals',
     'apps.consent',
@@ -85,10 +81,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
 
-# DRF settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -98,21 +92,29 @@ REST_FRAMEWORK = {
     ),
 }
 
-# JWT settings
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=config('ACCESS_TOKEN_LIFETIME', default=60, cast=int)),
     'REFRESH_TOKEN_LIFETIME': timedelta(minutes=config('REFRESH_TOKEN_LIFETIME', default=10080, cast=int)),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# CORS
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
 ]
 
-# Celery / Redis
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULE = {
+    'expire-consents-every-5-minutes': {
+        'task': 'apps.consent.tasks.expire_old_consents',
+        'schedule': crontab(minute='*/5'),
+    },
+}
 
 AWS_ACCESS_KEY_ID = config(
     "AWS_ACCESS_KEY_ID",
