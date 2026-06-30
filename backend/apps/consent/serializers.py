@@ -1,20 +1,15 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import ConsentRequest
+from .models import ConsentRequest, Appointment
 
 
 class ConsentRequestSerializer(serializers.ModelSerializer):
-    patient_name = serializers.CharField(
-        source='patient.full_name', read_only=True
-    )
-
+    patient_name = serializers.CharField(source='patient.full_name', read_only=True)
     doctor_name = serializers.SerializerMethodField()
+    hospital_name = serializers.CharField(source='hospital.name', read_only=True)
+
     def get_doctor_name(self, obj):
         return obj.requested_by.user.get_full_name() or obj.requested_by.user.username
-
-    hospital_name = serializers.CharField(
-        source='hospital.name', read_only=True
-    )
 
     class Meta:
         model = ConsentRequest
@@ -40,3 +35,17 @@ class ConsentRequestSerializer(serializers.ModelSerializer):
 
 class ConsentRespondSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=['APPROVE', 'DENY'])
+
+
+class AppointmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Appointment
+        fields = '__all__'
+        read_only_fields = [
+            'id', 'otp_hash', 'otp_verified',
+            'verified_by_staff', 'status', 'created_at'
+        ]
+
+
+class OTPVerifySerializer(serializers.Serializer):
+    otp = serializers.CharField(max_length=6, min_length=6)
