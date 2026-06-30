@@ -40,7 +40,12 @@ class ConsentRespondSerializer(serializers.Serializer):
 class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
-        fields = '__all__'
+        fields = [
+            'id', 'patient', 'hospital', 'doctor',
+            'appointment_date', 'start_time', 'end_time',
+            'access_method',
+            'otp_hash', 'otp_verified', 'verified_by_staff', 'status', 'created_at',
+        ]
         read_only_fields = [
             'id', 'otp_hash', 'otp_verified',
             'verified_by_staff', 'status', 'created_at'

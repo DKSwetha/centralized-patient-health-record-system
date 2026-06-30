@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import timedelta, datetime
 
-from apps.accounts.permissions import IsPatient
+from apps.accounts.permissions import IsPatient, IsHospitalAdmin
 from .models import ConsentRequest, Appointment
 from .serializers import (
     ConsentRequestSerializer, ConsentRespondSerializer,
@@ -83,7 +83,7 @@ class ConsentDenyView(APIView):
 
 
 class AppointmentCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsHospitalAdmin]
 
     def post(self, request):
         serializer = AppointmentSerializer(data=request.data)
@@ -96,10 +96,12 @@ class AppointmentCreateView(APIView):
 
 
 class OTPVerifyView(APIView):
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [IsAuthenticated, IsHospitalAdmin]
     def post(self, request, pk):
         appointment = get_object_or_404(Appointment, pk=pk)
+        if appointment.status == 'ACTIVE':
+            return Response({'error': 'Appointment already verified.'}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = OTPVerifySerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -130,11 +132,12 @@ class OTPVerifyView(APIView):
 
 
 class ManualVerifyView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsHospitalAdmin]
 
     def post(self, request, pk):
         appointment = get_object_or_404(Appointment, pk=pk)
-
+        if appointment.status == 'ACTIVE':
+            return Response({'error': 'Appointment already verified.'}, status=status.HTTP_400_BAD_REQUEST)
         appointment.verified_by_staff = request.user
         appointment.status = 'ACTIVE'
         appointment.save()
