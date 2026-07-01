@@ -26,3 +26,4 @@ pytesseract==0.3.10
 
 # Dev utilities
 black==24.4.2
+drf-nested-routers==0.94.1

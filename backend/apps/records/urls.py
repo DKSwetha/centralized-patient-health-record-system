@@ -1,12 +1,11 @@
+from rest_framework_nested import routers
 from rest_framework.routers import DefaultRouter
-from .views import MedicalRecordViewSet
+from .views import MedicalRecordViewSet, PrescriptionItemViewSet
 
 router = DefaultRouter()
+router.register(r'medical-records', MedicalRecordViewSet, basename='medical-records')
 
-router.register(
-    r"medical-records",
-    MedicalRecordViewSet,
-    basename="medical-records"
-)
+records_router = routers.NestedDefaultRouter(router, r'medical-records', lookup='record')
+records_router.register(r'prescriptions', PrescriptionItemViewSet, basename='record-prescriptions')
 
-urlpatterns = router.urls
+urlpatterns = router.urls + records_router.urls

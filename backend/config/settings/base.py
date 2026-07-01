@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'apps.consent',
     'apps.records',
     'apps.audit',
+    'rest_framework_nested',
 ]
 
 MIDDLEWARE = [
